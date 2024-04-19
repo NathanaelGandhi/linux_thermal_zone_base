@@ -1,0 +1,19 @@
+---
+name: Mirror main to humble
+
+on:
+    workflow_dispatch:
+    push:
+        branches:
+            - main
+
+permissions:
+    contents: write
+
+jobs:
+    mirror-to-master:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: zofrex/mirror-branch@v1
+              with:
+                  target-branch: humble
