@@ -7,9 +7,22 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(rclcpp REQUIRED)
+
+add_executable(thermal_zone_publisher
+  src/thermal_zone_publisher.cc
+  src/thermal_zone_publisher_node.cc)
+target_include_directories(thermal_zone_publisher PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+target_compile_features(thermal_zone_publisher PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+
+ament_target_dependencies(thermal_zone_publisher
+  rclcpp)
+
+install(TARGETS
+  thermal_zone_publisher
+  DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

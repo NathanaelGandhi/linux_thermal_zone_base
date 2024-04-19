@@ -3,9 +3,11 @@
 <package format="3">
   <name>thermal_zone_publisher</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="builder@todo.todo">builder</maintainer>
-  <license>TODO: License declaration</license>
+  <description>ROS2 node that will create publishers for thermal zones found on linux systems</description>
+  <maintainer email="nat11public@gmail.com">Nathanael Gandhi</maintainer>
+  <license>MIT</license>
+
+  <depend>rclcpp</depend>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
