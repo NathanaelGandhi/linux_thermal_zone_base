@@ -1,11 +1,9 @@
 ---
-name: Mirror main to humble
+name: Mirror release to humble
 
 on:
-    workflow_dispatch:
     push:
-        branches:
-            - main
+        branches: [release]
 
 permissions:
     contents: write

@@ -1,0 +1,108 @@
+---
+name-template: v$RESOLVED_VERSION 🌈
+tag-template: v$RESOLVED_VERSION
+categories:
+    - title: 🚀 Features
+      collapse-after: 10
+      labels:
+          - feature
+          - enhancement
+    - title: 🐛 Bug Fixes
+      collapse-after: 5
+      labels:
+          - fix
+          - bugfix
+          - bug
+    - title: 🧰 Maintenance
+      collapse-after: 5
+      labels:
+          - deploy
+          - build
+          - chore
+          - ci
+          - documentation
+          - refactor
+          - style
+          - test
+    - title: ⬆️ Dependencies
+      collapse-after: 5
+      labels:
+          - dependencies
+    - title: Other changes
+      collapse-after: 5
+autolabeler:
+    - label: breaking
+      title:
+          - /breaking change/i
+          - '!'
+    - label: bug
+      title:
+          - /bug/i
+    - label: build
+      title:
+          - /build/i
+    - label: chore
+      title:
+          - /chore/i
+    - label: ci
+      title:
+          - /ci/i
+    - label: dependencies
+      title:
+          - Bumps
+          - /deps/i
+    - label: deploy
+      title:
+          - /deploy/i
+    - label: documentation
+      title:
+          - /docs/i
+    - label: enhancement
+      title:
+          - /feat/i
+    - label: fix
+      title:
+          - /fix/i
+    - label: refactor
+      title:
+          - /refactor/i
+    - label: style
+      title:
+          - /style/i
+    - label: test
+      title:
+          - /test/i
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+change-title-escapes: \<*_&   # You can add # and @ to disable mentions, and add ` to disable code blocks.
+version-resolver:
+    major:
+        labels:
+            - major
+            - breaking
+    minor:
+        labels:
+            - minor
+            - enhancement
+    patch:
+        labels:
+            - patch
+            - bug
+            - build
+            - chore
+            - ci
+            - dependencies
+            - deploy
+            - documentation
+            - fix
+            - refactor
+            - style
+            - test
+    default: patch
+exclude-labels:
+    - skip-changelog
+template: |
+    ## Changes
+
+    $CHANGES
+
+    **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION
