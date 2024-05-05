@@ -1,7 +1,7 @@
 #include <memory>
 #include <rclcpp/rclcpp.hpp>
 
-#include "thermal_zone_publisher/thermal_zone_publisher_node.h"
+#include "thermal_zone/thermal_zone_node.hpp"
 
 int main(int argc, char ** argv)
 {
