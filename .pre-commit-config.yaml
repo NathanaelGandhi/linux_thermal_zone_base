@@ -56,7 +56,7 @@ repos:
           - id: check-json5
   # C || C++ || Cuda
     - repo: https://github.com/pre-commit/mirrors-clang-format
-      rev: v18.1.4
+      rev: v18.1.5
       hooks:
           - id: clang-format
             args: [--style=file]
