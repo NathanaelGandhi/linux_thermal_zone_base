@@ -8,7 +8,7 @@ int main(int argc, char ** argv)
   rclcpp::init(argc, argv);
 
   rclcpp::executors::SingleThreadedExecutor exec;
-  exec.add_node(std::make_shared<ThermalZonePublisherNode>("thermal_zone_publisher"));
+  exec.add_node(std::make_shared<ThermalZoneNode>("thermal_zone_node"));
   exec.spin();
 
   rclcpp::shutdown();

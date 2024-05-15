@@ -7,15 +7,14 @@
 
 // PUBLIC FUNCTIONS
 
-ThermalZonePublisherNode::ThermalZonePublisherNode(const std::string & node_name)
-: rclcpp::Node(node_name)
+ThermalZoneNode::ThermalZoneNode(const std::string & node_name) : rclcpp::Node(node_name)
 {
   RCLCPP_INFO_STREAM(this->get_logger(), "default constructor executed");
 
   std::vector<thermal_zone_interfaces::msg::ThermalZone> msgs = GetZoneMsgVector();
 }
 
-ThermalZonePublisherNode::~ThermalZonePublisherNode()
+ThermalZoneNode::~ThermalZoneNode()
 {
   RCLCPP_INFO_STREAM(this->get_logger(), "destructor executed");
 }
@@ -24,7 +23,7 @@ ThermalZonePublisherNode::~ThermalZonePublisherNode()
 
 // PRIVATE FUNCTIONS
 
-uint8_t ThermalZonePublisherNode::CountMatchingDirectories(const std::string & pattern)
+uint8_t ThermalZoneNode::CountMatchingDirectories(const std::string & pattern)
 {
   uint8_t count = 0;
 
@@ -38,8 +37,7 @@ uint8_t ThermalZonePublisherNode::CountMatchingDirectories(const std::string & p
   return count;
 }
 
-std::vector<thermal_zone_interfaces::msg::ThermalZone> ThermalZonePublisherNode::GetZoneMsgVector(
-  void)
+std::vector<thermal_zone_interfaces::msg::ThermalZone> ThermalZoneNode::GetZoneMsgVector(void)
 {
   std::vector<thermal_zone_interfaces::msg::ThermalZone> msgs;
   const std::string key = "thermal_zone";
@@ -56,7 +54,7 @@ std::vector<thermal_zone_interfaces::msg::ThermalZone> ThermalZonePublisherNode:
   return msgs;
 }
 
-thermal_zone_interfaces::msg::ThermalZone ThermalZonePublisherNode::GetZoneMsg(
+thermal_zone_interfaces::msg::ThermalZone ThermalZoneNode::GetZoneMsg(
   std::string key, uint8_t zone_index)
 {
   std::string prefix = "/sys/class/thermal/";
@@ -75,7 +73,7 @@ thermal_zone_interfaces::msg::ThermalZone ThermalZonePublisherNode::GetZoneMsg(
   return msg;
 }
 
-double ThermalZonePublisherNode::GetZoneTemperature(std::string thermal_zone_dir)
+double ThermalZoneNode::GetZoneTemperature(std::string thermal_zone_dir)
 {
   std::string filename = "/temp";
   std::string filepath = thermal_zone_dir + filename;
