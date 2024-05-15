@@ -5,11 +5,11 @@
 
 #include "thermal_zone_interfaces/msg/thermal_zone.hpp"
 
-class ThermalZonePublisherNode : public rclcpp::Node
+class ThermalZoneNode : public rclcpp::Node
 {
 public:
-  explicit ThermalZonePublisherNode(const std::string & node_name);
-  ~ThermalZonePublisherNode();
+  explicit ThermalZoneNode(const std::string & node_name);
+  ~ThermalZoneNode();
 
 protected:
 private:
