@@ -1,17 +1,29 @@
 #include "thermal_zone/thermal_zone_node.hpp"
 
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
 
+using namespace std::chrono_literals;
+
 // PUBLIC FUNCTIONS
 
-ThermalZoneNode::ThermalZoneNode(const std::string & node_name) : rclcpp::Node(node_name)
+ThermalZoneNode::ThermalZoneNode(const std::string & node_name)
+: rclcpp::Node(node_name), thermal_pub_count_(0)
 {
   RCLCPP_INFO_STREAM(this->get_logger(), "default constructor executed");
 
-  std::vector<thermal_zone_interfaces::msg::ThermalZone> msgs = GetZoneMsgVector();
+  timer_1s_ = this->create_wall_timer(1s, std::bind(&ThermalZoneNode::timer_1s_callback, this));
+  timer_10s_ = this->create_wall_timer(10s, std::bind(&ThermalZoneNode::timer_10s_callback, this));
+  RCLCPP_INFO_STREAM(this->get_logger(), "timers created");
+
+  publisher_thermal_ =
+    this->create_publisher<thermal_zone_interfaces::msg::ThermalZone>("thermal", 10);
+  publisher_node_hk_ =
+    this->create_publisher<thermal_zone_interfaces::msg::ThermalZoneNodeHk>("node_hk", 10);
+  RCLCPP_INFO_STREAM(this->get_logger(), "publishers created");
 }
 
 ThermalZoneNode::~ThermalZoneNode()
@@ -22,6 +34,26 @@ ThermalZoneNode::~ThermalZoneNode()
 // PROTECTED FUNCTIONS
 
 // PRIVATE FUNCTIONS
+
+void ThermalZoneNode::timer_1s_callback()
+{
+  RCLCPP_DEBUG_STREAM(this->get_logger(), "timer_1s_callback executed");
+  std::vector<thermal_zone_interfaces::msg::ThermalZone> msgs = GetZoneMsgVector();
+
+  RCLCPP_INFO_STREAM(this->get_logger(), "Publishing: " << msgs.size() << " ThermalZone messages");
+  for (thermal_zone_interfaces::msg::ThermalZone message : msgs) {
+    publisher_thermal_->publish(message);
+    thermal_pub_count_++;
+  }
+}
+
+void ThermalZoneNode::timer_10s_callback()
+{
+  RCLCPP_DEBUG_STREAM(this->get_logger(), "timer_10s_callback executed");
+  thermal_zone_interfaces::msg::ThermalZoneNodeHk message;
+  message.set__thermal_zone_publish_count(thermal_pub_count_);
+  publisher_node_hk_->publish(message);
+}
 
 uint8_t ThermalZoneNode::CountMatchingDirectories(const std::string & pattern)
 {
