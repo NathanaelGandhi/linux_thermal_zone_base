@@ -107,11 +107,15 @@ linux_thermal_zone_interfaces::msg::LinuxThermalZone LinuxThermalZoneBaseNode::G
   std::string id = key + std::to_string(zone_index);
   std::string thermal_zone_dir = prefix + id;
 
+  // header
   msg.header.set__stamp(now());
+  msg.header.set__frame_id(id);
   // temperature
   msg.temperature.header.set__stamp(now());
   msg.temperature.header.set__frame_id(id);
   msg.temperature.temperature = GetZoneTemperature(thermal_zone_dir);
+  // type
+  msg.type = GetZoneString(thermal_zone_dir + "/type");
 
   return msg;
 }
@@ -145,4 +149,30 @@ double LinuxThermalZoneBaseNode::GetZoneTemperature(std::string thermal_zone_dir
   }
 
   return temperature;
+}
+
+std::string LinuxThermalZoneBaseNode::GetZoneString(std::string filepath)
+{
+  std::ifstream file(filepath);
+  std::string return_string;
+
+  if (file.is_open()) {
+    std::string line;
+    std::getline(file, line);  // Read the first line (assuming it contains the value)
+    file.close();
+
+    // Copy string to return and handle errors
+    try {
+      return_string = line;
+      RCLCPP_DEBUG_STREAM(this->get_logger(), filepath << " value: " << return_string);
+    } catch (const std::invalid_argument & e) {
+      RCLCPP_WARN_STREAM(this->get_logger(), "Invalid type data in file: " << filepath);
+    } catch (const std::out_of_range & e) {
+      RCLCPP_WARN_STREAM(this->get_logger(), "Type value out of range in file: " << filepath);
+    }
+  } else {
+    std::cerr << "Failed to open file " << filepath << std::endl;
+  }
+
+  return return_string;
 }
