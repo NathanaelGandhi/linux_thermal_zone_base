@@ -1,0 +1,17 @@
+---
+name: Mirror release to humble
+
+on:
+    push:
+        branches: [release]
+
+permissions:
+    contents: write
+
+jobs:
+    mirror-to-master:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: zofrex/mirror-branch@v1
+              with:
+                  target-branch: humble

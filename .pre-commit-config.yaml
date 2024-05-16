@@ -1,0 +1,64 @@
+---
+ci:
+    autofix_prs: false
+
+fail_fast: false
+
+repos:
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v4.6.0
+      hooks:
+          - id: check-added-large-files
+          - id: check-ast
+          - id: check-case-conflict
+          - id: check-docstring-first
+          - id: check-executables-have-shebangs
+          - id: check-merge-conflict
+          - id: check-shebang-scripts-are-executable
+          - id: check-toml
+          - id: check-vcs-permalinks
+          - id: check-xml
+          - id: check-yaml
+          - id: end-of-file-fixer
+          - id: fix-byte-order-marker
+          - id: mixed-line-ending
+          - id: name-tests-test
+          - id: trailing-whitespace
+
+  # Shell
+    - repo: https://github.com/maxwinterstein/shfmt-py
+      rev: v3.7.0.1
+      hooks:
+          - id: shfmt
+    - repo: https://github.com/shellcheck-py/shellcheck-py
+      rev: v0.10.0.1
+      hooks:
+          - id: shellcheck
+            args: [-x]
+  # Python
+    - repo: https://github.com/psf/black-pre-commit-mirror
+      rev: 24.4.2
+      hooks:
+          - id: black
+    - repo: https://github.com/asottile/reorder-python-imports
+      rev: v3.12.0
+      hooks:
+          - id: reorder-python-imports
+  # YAML
+    - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
+      rev: 0.2.3
+      hooks:
+          - id: yamlfmt
+  # JSON
+    - repo: https://gitlab.com/bmares/check-json5
+      rev: v1.0.0
+      hooks:
+          - id: check-json5
+  # C || C++ || Cuda
+    - repo: https://github.com/pre-commit/mirrors-clang-format
+      rev: v18.1.5
+      hooks:
+          - id: clang-format
+            args: [--style=file]
+            types_or: [c++, c, cuda]
+            require_serial: true

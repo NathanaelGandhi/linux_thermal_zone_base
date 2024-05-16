@@ -1,11 +1,14 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>thermal_zone_publisher</name>
+  <name>linux_thermal_zone_base</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="builder@todo.todo">builder</maintainer>
-  <license>TODO: License declaration</license>
+  <description>ROS2 base for Linux Thermal Zone(s)</description>
+  <maintainer email="nat11public@gmail.com">Nathanael Gandhi</maintainer>
+  <license>MIT</license>
+
+  <depend>rclcpp</depend>
+  <depend>linux_thermal_zone_interfaces</depend>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
