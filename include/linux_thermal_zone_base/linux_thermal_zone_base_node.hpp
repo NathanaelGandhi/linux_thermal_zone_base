@@ -28,6 +28,7 @@ private:
   std::vector<linux_thermal_zone_interfaces::msg::LinuxThermalZone> GetZoneMsgVector(void);
   linux_thermal_zone_interfaces::msg::LinuxThermalZone GetZoneMsg(
     std::string key, uint8_t zone_index);
-  double GetZoneTemperature(std::string prefix);
+  double GetZoneTemperature(std::string thermal_zone_dir);
+  std::string GetZoneString(std::string filepath);
   uint8_t CountMatchingDirectories(const std::string & pattern);
 };
