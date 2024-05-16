@@ -1,4 +1,4 @@
-#include "thermal_zone/thermal_zone_node.hpp"
+#include "linux_thermal_zone_base/linux_thermal_zone_base_node.hpp"
 
 #include <chrono>
 #include <filesystem>
@@ -10,23 +10,26 @@ using namespace std::chrono_literals;
 
 // PUBLIC FUNCTIONS
 
-ThermalZoneNode::ThermalZoneNode(const std::string & node_name)
+LinuxThermalZoneBaseNode::LinuxThermalZoneBaseNode(const std::string & node_name)
 : rclcpp::Node(node_name), thermal_pub_count_(0)
 {
   RCLCPP_INFO_STREAM(this->get_logger(), "default constructor executed");
 
-  timer_1s_ = this->create_wall_timer(1s, std::bind(&ThermalZoneNode::timer_1s_callback, this));
-  timer_10s_ = this->create_wall_timer(10s, std::bind(&ThermalZoneNode::timer_10s_callback, this));
+  timer_1s_ =
+    this->create_wall_timer(1s, std::bind(&LinuxThermalZoneBaseNode::timer_1s_callback, this));
+  timer_10s_ =
+    this->create_wall_timer(10s, std::bind(&LinuxThermalZoneBaseNode::timer_10s_callback, this));
   RCLCPP_INFO_STREAM(this->get_logger(), "timers created");
 
   publisher_thermal_ =
-    this->create_publisher<thermal_zone_interfaces::msg::ThermalZone>("thermal", 10);
+    this->create_publisher<linux_thermal_zone_interfaces::msg::LinuxThermalZone>("thermal", 10);
   publisher_node_hk_ =
-    this->create_publisher<thermal_zone_interfaces::msg::ThermalZoneNodeHk>("node_hk", 10);
+    this->create_publisher<linux_thermal_zone_interfaces::msg::LinuxThermalZoneBaseNodeHk>(
+      "node_hk", 10);
   RCLCPP_INFO_STREAM(this->get_logger(), "publishers created");
 }
 
-ThermalZoneNode::~ThermalZoneNode()
+LinuxThermalZoneBaseNode::~LinuxThermalZoneBaseNode()
 {
   RCLCPP_INFO_STREAM(this->get_logger(), "destructor executed");
 }
@@ -35,27 +38,27 @@ ThermalZoneNode::~ThermalZoneNode()
 
 // PRIVATE FUNCTIONS
 
-void ThermalZoneNode::timer_1s_callback()
+void LinuxThermalZoneBaseNode::timer_1s_callback()
 {
   RCLCPP_DEBUG_STREAM(this->get_logger(), "timer_1s_callback executed");
-  std::vector<thermal_zone_interfaces::msg::ThermalZone> msgs = GetZoneMsgVector();
+  std::vector<linux_thermal_zone_interfaces::msg::LinuxThermalZone> msgs = GetZoneMsgVector();
 
   RCLCPP_INFO_STREAM(this->get_logger(), "Publishing: " << msgs.size() << " ThermalZone messages");
-  for (thermal_zone_interfaces::msg::ThermalZone message : msgs) {
+  for (linux_thermal_zone_interfaces::msg::LinuxThermalZone message : msgs) {
     publisher_thermal_->publish(message);
     thermal_pub_count_++;
   }
 }
 
-void ThermalZoneNode::timer_10s_callback()
+void LinuxThermalZoneBaseNode::timer_10s_callback()
 {
   RCLCPP_DEBUG_STREAM(this->get_logger(), "timer_10s_callback executed");
-  thermal_zone_interfaces::msg::ThermalZoneNodeHk message;
+  linux_thermal_zone_interfaces::msg::LinuxThermalZoneBaseNodeHk message;
   message.set__thermal_zone_publish_count(thermal_pub_count_);
   publisher_node_hk_->publish(message);
 }
 
-uint8_t ThermalZoneNode::CountMatchingDirectories(const std::string & pattern)
+uint8_t LinuxThermalZoneBaseNode::CountMatchingDirectories(const std::string & pattern)
 {
   uint8_t count = 0;
 
@@ -69,9 +72,10 @@ uint8_t ThermalZoneNode::CountMatchingDirectories(const std::string & pattern)
   return count;
 }
 
-std::vector<thermal_zone_interfaces::msg::ThermalZone> ThermalZoneNode::GetZoneMsgVector(void)
+std::vector<linux_thermal_zone_interfaces::msg::LinuxThermalZone>
+LinuxThermalZoneBaseNode::GetZoneMsgVector(void)
 {
-  std::vector<thermal_zone_interfaces::msg::ThermalZone> msgs;
+  std::vector<linux_thermal_zone_interfaces::msg::LinuxThermalZone> msgs;
   const std::string key = "thermal_zone";
   uint8_t num_zones = CountMatchingDirectories(key);
 
@@ -86,12 +90,12 @@ std::vector<thermal_zone_interfaces::msg::ThermalZone> ThermalZoneNode::GetZoneM
   return msgs;
 }
 
-thermal_zone_interfaces::msg::ThermalZone ThermalZoneNode::GetZoneMsg(
+linux_thermal_zone_interfaces::msg::LinuxThermalZone LinuxThermalZoneBaseNode::GetZoneMsg(
   std::string key, uint8_t zone_index)
 {
   std::string prefix = "/sys/class/thermal/";
 
-  auto msg = thermal_zone_interfaces::msg::ThermalZone();
+  auto msg = linux_thermal_zone_interfaces::msg::LinuxThermalZone();
 
   std::string id = key + std::to_string(zone_index);
   std::string thermal_zone_dir = prefix + id;
@@ -105,7 +109,7 @@ thermal_zone_interfaces::msg::ThermalZone ThermalZoneNode::GetZoneMsg(
   return msg;
 }
 
-double ThermalZoneNode::GetZoneTemperature(std::string thermal_zone_dir)
+double LinuxThermalZoneBaseNode::GetZoneTemperature(std::string thermal_zone_dir)
 {
   std::string filename = "/temp";
   std::string filepath = thermal_zone_dir + filename;
