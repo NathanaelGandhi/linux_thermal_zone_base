@@ -54,7 +54,7 @@ void LinuxThermalZoneBaseNode::timer_10s_callback()
 {
   RCLCPP_DEBUG_STREAM(this->get_logger(), "timer_10s_callback executed");
   linux_thermal_zone_interfaces::msg::LinuxThermalZoneBaseNodeHk message;
-  message.set__thermal_zone_publish_count(thermal_pub_count_);
+  message.set__linux_thermal_zone_publish_count(thermal_pub_count_);
   publisher_node_hk_->publish(message);
 }
 
