@@ -14,15 +14,27 @@ LinuxThermalZoneBaseNode::LinuxThermalZoneBaseNode(const std::string & node_name
 {
   RCLCPP_INFO_STREAM(this->get_logger(), "default constructor executed");
 
+  // ros parameters
+  auto rate_param_desc = rcl_interfaces::msg::ParameterDescriptor{};
+  rate_param_desc.description = "Frequency (rate in Hz) of type: double";
+  this->declare_parameter("data_pub_rate_hz", 1.0, rate_param_desc);
+  this->declare_parameter("hk_pub_rate_hz", 0.1, rate_param_desc);
+  this->declare_parameter("data_acquisition_rate_hz", 0.5, rate_param_desc);
+  params.data_pub_rate_hz_ = this->get_parameter("data_pub_rate_hz").as_double();
+  params.hk_pub_rate_hz_ = this->get_parameter("hk_pub_rate_hz").as_double();
+  params.data_acquisition_rate_hz_ = this->get_parameter("data_acquisition_rate_hz").as_double();
+
   // threads
   data_acquisition_thread_ =
     std::thread(std::bind(&LinuxThermalZoneBaseNode::data_acquisition_thread, this));
 
   // timers
-  timer_1s_ =
-    this->create_wall_timer(1s, std::bind(&LinuxThermalZoneBaseNode::timer_1s_callback, this));
-  timer_10s_ =
-    this->create_wall_timer(10s, std::bind(&LinuxThermalZoneBaseNode::timer_10s_callback, this));
+  data_pub_timer_ = this->create_wall_timer(
+    std::chrono::milliseconds(static_cast<int64_t>(1000.0 / params.data_pub_rate_hz_)),
+    std::bind(&LinuxThermalZoneBaseNode::data_pub_timer_callback, this));
+  hk_pub_timer_ = this->create_wall_timer(
+    std::chrono::milliseconds(static_cast<int64_t>(1000.0 / params.hk_pub_rate_hz_)),
+    std::bind(&LinuxThermalZoneBaseNode::hk_pub_timer_callback, this));
   RCLCPP_INFO_STREAM(this->get_logger(), "timers created");
 
   uint8_t num_thermal_zones = CountMatchingDirectories("thermal_zone");
@@ -53,6 +65,7 @@ LinuxThermalZoneBaseNode::~LinuxThermalZoneBaseNode()
 
 void LinuxThermalZoneBaseNode::data_acquisition_thread(void)
 {
+  rclcpp::Rate rate(params.data_acquisition_rate_hz_);
   while (rclcpp::ok()) {
     RCLCPP_INFO_STREAM(
       this->get_logger(),
@@ -61,13 +74,13 @@ void LinuxThermalZoneBaseNode::data_acquisition_thread(void)
     std::unique_lock<std::mutex> lock(linux_thermal_zone_msgs_mutex_);
     linux_thermal_zone_msgs_ = msgs;
     lock.unlock();  // unlock the mutex explicitly
-    std::this_thread::sleep_for(2s);
+    rate.sleep();   // sleep to maintain the loop rate
   }
 }
 
-void LinuxThermalZoneBaseNode::timer_1s_callback()
+void LinuxThermalZoneBaseNode::data_pub_timer_callback()
 {
-  RCLCPP_DEBUG_STREAM(this->get_logger(), "timer_1s_callback executed");
+  RCLCPP_DEBUG_STREAM(this->get_logger(), "data_pub_timer_callback executed");
 
   RCLCPP_INFO_STREAM(
     this->get_logger(),
@@ -81,9 +94,9 @@ void LinuxThermalZoneBaseNode::timer_1s_callback()
   }
 }
 
-void LinuxThermalZoneBaseNode::timer_10s_callback()
+void LinuxThermalZoneBaseNode::hk_pub_timer_callback()
 {
-  RCLCPP_DEBUG_STREAM(this->get_logger(), "timer_10s_callback executed");
+  RCLCPP_DEBUG_STREAM(this->get_logger(), "hk_pub_timer_callback executed");
   linux_thermal_zone_interfaces::msg::LinuxThermalZoneBaseNodeHk message;
   message.set__linux_thermal_zone_publish_count(linux_thermal_zone_pub_count_);
   publisher_node_hk_->publish(message);
