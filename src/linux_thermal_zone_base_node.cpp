@@ -14,6 +14,11 @@ LinuxThermalZoneBaseNode::LinuxThermalZoneBaseNode(const std::string & node_name
 {
   RCLCPP_INFO_STREAM(this->get_logger(), "default constructor executed");
 
+  // threads
+  data_acquisition_thread_ =
+    std::thread(std::bind(&LinuxThermalZoneBaseNode::data_acquisition_thread, this));
+
+  // timers
   timer_1s_ =
     this->create_wall_timer(1s, std::bind(&LinuxThermalZoneBaseNode::timer_1s_callback, this));
   timer_10s_ =
@@ -22,6 +27,7 @@ LinuxThermalZoneBaseNode::LinuxThermalZoneBaseNode(const std::string & node_name
 
   uint8_t num_thermal_zones = CountMatchingDirectories("thermal_zone");
 
+  // publishers
   for (uint8_t zone_index = 0; zone_index < num_thermal_zones; zone_index++) {
     std::string zone_string = "thermal_zone" + std::to_string(zone_index);
     publishers_linux_thermal_zone_.push_back(
@@ -37,21 +43,40 @@ LinuxThermalZoneBaseNode::LinuxThermalZoneBaseNode(const std::string & node_name
 LinuxThermalZoneBaseNode::~LinuxThermalZoneBaseNode()
 {
   RCLCPP_INFO_STREAM(this->get_logger(), "destructor executed");
+
+  data_acquisition_thread_.join();
 }
 
 // PROTECTED FUNCTIONS
 
 // PRIVATE FUNCTIONS
 
+void LinuxThermalZoneBaseNode::data_acquisition_thread(void)
+{
+  while (rclcpp::ok()) {
+    RCLCPP_INFO_STREAM(
+      this->get_logger(),
+      "data_acquisition_thread executed on thread id: " << std::this_thread::get_id());
+    auto msgs = GetZoneMsgVector();
+    std::unique_lock<std::mutex> lock(linux_thermal_zone_msgs_mutex_);
+    linux_thermal_zone_msgs_ = msgs;
+    lock.unlock();  // unlock the mutex explicitly
+    std::this_thread::sleep_for(2s);
+  }
+}
+
 void LinuxThermalZoneBaseNode::timer_1s_callback()
 {
   RCLCPP_DEBUG_STREAM(this->get_logger(), "timer_1s_callback executed");
-  std::vector<linux_thermal_zone_interfaces::msg::LinuxThermalZone> msgs = GetZoneMsgVector();
 
   RCLCPP_INFO_STREAM(
-    this->get_logger(), "Publishing: " << msgs.size() << " LinuxThermalZone messages");
+    this->get_logger(),
+    "Publishing: " << linux_thermal_zone_msgs_.size() << " LinuxThermalZone messages");
+
+  const std::lock_guard<std::mutex> lock(
+    linux_thermal_zone_msgs_mutex_);  // lock until end of scope
   for (uint8_t index = 0; index < publishers_linux_thermal_zone_.size(); index++) {
-    publishers_linux_thermal_zone_.at(index)->publish(msgs.at(index));
+    publishers_linux_thermal_zone_.at(index)->publish(linux_thermal_zone_msgs_.at(index));
     linux_thermal_zone_pub_count_++;
   }
 }
