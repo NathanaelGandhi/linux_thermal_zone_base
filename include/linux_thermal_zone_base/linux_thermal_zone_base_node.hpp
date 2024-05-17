@@ -1,7 +1,10 @@
 #pragma once
 
+#include <atomic>
+#include <mutex>
 #include <rclcpp/rclcpp.hpp>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "linux_thermal_zone_interfaces/msg/linux_thermal_zone.hpp"
@@ -15,7 +18,10 @@ public:
 
 protected:
 private:
-  size_t linux_thermal_zone_pub_count_;
+  std::thread data_acquisition_thread_;
+  std::mutex linux_thermal_zone_msgs_mutex_;
+  std::vector<linux_thermal_zone_interfaces::msg::LinuxThermalZone> linux_thermal_zone_msgs_;
+  std::atomic<size_t> linux_thermal_zone_pub_count_;
   rclcpp::TimerBase::SharedPtr timer_1s_;
   rclcpp::TimerBase::SharedPtr timer_10s_;
   std::vector<rclcpp::Publisher<linux_thermal_zone_interfaces::msg::LinuxThermalZone>::SharedPtr>
@@ -25,6 +31,7 @@ private:
 
   void timer_1s_callback(void);
   void timer_10s_callback(void);
+  void data_acquisition_thread(void);
   std::vector<linux_thermal_zone_interfaces::msg::LinuxThermalZone> GetZoneMsgVector(void);
   linux_thermal_zone_interfaces::msg::LinuxThermalZone GetZoneMsg(
     std::string key, uint8_t zone_index);
