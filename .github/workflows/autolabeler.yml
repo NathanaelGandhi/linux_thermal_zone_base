@@ -1,10 +1,7 @@
 ---
-name: Release Drafter
+name: autolabeler
 
 on:
-    push:
-        branches:
-            - release
     pull_request:
         types: [opened, reopened, synchronize]
     workflow_dispatch:
@@ -13,7 +10,7 @@ permissions:
     contents: read
 
 jobs:
-    update_release_draft:
+    label_pr:
         permissions:
             # write permission is required to create a github release
             contents: write
@@ -22,21 +19,11 @@ jobs:
             pull-requests: write
         runs-on: ubuntu-latest
         steps:
-            - name: version
-              id: version
-              run: |
-                  tag=${GITHUB_REF/refs\/tags\//}
-                  version=${tag#v}
-                  major=${version%%.*}
-                  echo "tag=${tag}" >> $GITHUB_OUTPUT
-                  echo "version=${version}" >> $GITHUB_OUTPUT
-                  echo "major=${major}" >> $GITHUB_OUTPUT
-
             - uses: release-drafter/release-drafter@v6
               with:
-                  version: ${{ steps.version.outputs.version }}
-                  publish: true
                   config-name: release-drafter-config.yml
                   disable-autolabeler: false
+                  prerelease: false
+                  publish: false
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

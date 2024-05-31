@@ -1,0 +1,41 @@
+---
+name: Release
+
+on:
+    push:
+        branches:
+            - release
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    publish_release:
+        permissions:
+            # write permission is required to create a github release
+            contents: write
+            # write permission is required for autolabeler
+            # otherwise, read permission is required at least
+            pull-requests: read
+        runs-on: ubuntu-latest
+        steps:
+            - name: version
+              id: version
+              run: |
+                  tag=${GITHUB_REF/refs\/tags\//}
+                  version=${tag#v}
+                  major=${version%%.*}
+                  echo "tag=${tag}" >> $GITHUB_OUTPUT
+                  echo "version=${version}" >> $GITHUB_OUTPUT
+                  echo "major=${major}" >> $GITHUB_OUTPUT
+
+            - uses: release-drafter/release-drafter@v6
+              with:
+                  config-name: release-drafter-config.yml
+                  disable-autolabeler: true
+                  prerelease: false
+                  publish: true
+                  version: ${{ steps.version.outputs.version }}
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

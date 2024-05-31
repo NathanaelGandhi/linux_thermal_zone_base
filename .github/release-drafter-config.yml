@@ -2,18 +2,18 @@
 name-template: v$RESOLVED_VERSION
 tag-template: v$RESOLVED_VERSION
 categories:
-    - title: 🚀 Features
+    - title: Features
       collapse-after: 10
       labels:
           - feature
           - enhancement
-    - title: 🐛 Bug Fixes
+    - title: Bug Fixes
       collapse-after: 5
       labels:
           - fix
           - bugfix
           - bug
-    - title: 🧰 Maintenance
+    - title: Maintenance
       collapse-after: 5
       labels:
           - deploy
@@ -24,7 +24,7 @@ categories:
           - refactor
           - style
           - test
-    - title: ⬆️ Dependencies
+    - title: Dependencies
       collapse-after: 5
       labels:
           - dependencies
@@ -91,7 +91,6 @@ version-resolver:
             - chore
             - ci
             - dependencies
-            - deploy
             - documentation
             - fix
             - refactor
