@@ -66,10 +66,10 @@ repos:
     #   rev: 1.6.0
     #   hooks:
     #       - id: cpplint
-    # - repo: https://github.com/pocc/pre-commit-hooks
-    #   rev: v1.3.5
-    #   hooks:
-    #       - id: cppcheck
+    - repo: https://github.com/pocc/pre-commit-hooks
+      rev: v1.3.5
+      hooks:
+          - id: cppcheck
     # - repo: local
     #   hooks:
     #       - id: cppcheck-changed-lines
@@ -89,40 +89,41 @@ repos:
     #         stages: [commit]
     # Code linters and checks
 
-    - repo: local
-      hooks:
-          - id: ament_cppcheck
-            name: ament_cppcheck
-            description: Static code analysis of C/C++ files.
-            stages: [commit]
-            entry: env AMENT_CPPCHECK_ALLOW_SLOW_VERSIONS=true ament_cppcheck
-            language: system
-            files: \.(h\+\+|h|hh|hxx|hpp|cuh|c|cc|cpp|cu|c\+\+|cxx|tpp|txx)$
-          # - id: ament_cpplint
-          #   name: ament_cpplint
-          #   description: Static code analysis of C/C++ files.
-          #   stages: [commit]
-          #   entry: ament_cpplint
-          #   language: system
-          #   files: \.(h\+\+|h|hh|hxx|hpp|cuh|c|cc|cpp|cu|c\+\+|cxx|tpp|txx)$
-          #   args: [--linelength=100, '--filter=-whitespace/newline,-build/include_order']
-          - id: ament_lint_cmake
-            name: ament_lint_cmake
-            description: Check format of CMakeLists.txt files.
-            stages: [commit]
-            entry: ament_lint_cmake
-            language: system
-            files: CMakeLists\.txt$
-          # - id: ament_copyright
-          #   name: ament_copyright
-          #   description: Check if copyright notice is available in all files.
-          #   stages: [commit]
-          #   entry: ament_copyright
-          #   language: system
-          # - id: clang-format
-          #   name: clang-format
-          #   description: Format files with ClangFormat.
-          #   entry: clang-format-14
-          #   language: system
-          #   files: \.(c|cc|cxx|cpp|frag|glsl|h|hpp|hxx|ih|ispc|ipp|java|js|m|proto|vert)$
-          #   args: [-fallback-style=none, -i]
+    # # This won't run online...
+    # - repo: local
+    #   hooks:
+    #       - id: ament_cppcheck
+    #         name: ament_cppcheck
+    #         description: Static code analysis of C/C++ files.
+    #         stages: [commit]
+    #         entry: env AMENT_CPPCHECK_ALLOW_SLOW_VERSIONS=true ament_cppcheck
+    #         language: system
+    #         files: \.(h\+\+|h|hh|hxx|hpp|cuh|c|cc|cpp|cu|c\+\+|cxx|tpp|txx)$
+    #       # - id: ament_cpplint
+    #       #   name: ament_cpplint
+    #       #   description: Static code analysis of C/C++ files.
+    #       #   stages: [commit]
+    #       #   entry: ament_cpplint
+    #       #   language: system
+    #       #   files: \.(h\+\+|h|hh|hxx|hpp|cuh|c|cc|cpp|cu|c\+\+|cxx|tpp|txx)$
+    #       #   args: [--linelength=100, '--filter=-whitespace/newline,-build/include_order']
+    #       - id: ament_lint_cmake
+    #         name: ament_lint_cmake
+    #         description: Check format of CMakeLists.txt files.
+    #         stages: [commit]
+    #         entry: ament_lint_cmake
+    #         language: system
+    #         files: CMakeLists\.txt$
+    #       # - id: ament_copyright
+    #       #   name: ament_copyright
+    #       #   description: Check if copyright notice is available in all files.
+    #       #   stages: [commit]
+    #       #   entry: ament_copyright
+    #       #   language: system
+    #       # - id: clang-format
+    #       #   name: clang-format
+    #       #   description: Format files with ClangFormat.
+    #       #   entry: clang-format-14
+    #       #   language: system
+    #       #   files: \.(c|cc|cxx|cpp|frag|glsl|h|hpp|hxx|ih|ispc|ipp|java|js|m|proto|vert)$
+    #       #   args: [-fallback-style=none, -i]
