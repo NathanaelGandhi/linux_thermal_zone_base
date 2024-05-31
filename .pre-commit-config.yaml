@@ -69,7 +69,9 @@ repos:
     - repo: https://github.com/pocc/pre-commit-hooks
       rev: v1.3.5
       hooks:
-          - id: cppcheck
+          # - id: cppcheck
+          - id: clang-tidy
+            args: [-checks=* -warnings-as-errors=*]
     # - repo: local
     #   hooks:
     #       - id: cppcheck-changed-lines
