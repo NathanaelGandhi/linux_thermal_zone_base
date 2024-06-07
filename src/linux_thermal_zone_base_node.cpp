@@ -14,14 +14,32 @@ LinuxThermalZoneBaseNode::LinuxThermalZoneBaseNode(const std::string & node_name
 {
   RCLCPP_INFO_STREAM(this->get_logger(), "default constructor executed");
 
-  timer_1s_ =
-    this->create_wall_timer(1s, std::bind(&LinuxThermalZoneBaseNode::timer_1s_callback, this));
-  timer_10s_ =
-    this->create_wall_timer(10s, std::bind(&LinuxThermalZoneBaseNode::timer_10s_callback, this));
+  // ros parameters
+  auto rate_param_desc = rcl_interfaces::msg::ParameterDescriptor{};
+  rate_param_desc.description = "Frequency (rate in Hz) of type: double";
+  this->declare_parameter("data_pub_rate_hz", 1.0, rate_param_desc);
+  this->declare_parameter("hk_pub_rate_hz", 0.1, rate_param_desc);
+  this->declare_parameter("data_acquisition_rate_hz", 0.5, rate_param_desc);
+  params.data_pub_rate_hz_ = this->get_parameter("data_pub_rate_hz").as_double();
+  params.hk_pub_rate_hz_ = this->get_parameter("hk_pub_rate_hz").as_double();
+  params.data_acquisition_rate_hz_ = this->get_parameter("data_acquisition_rate_hz").as_double();
+
+  // threads
+  data_acquisition_thread_ =
+    std::thread(std::bind(&LinuxThermalZoneBaseNode::data_acquisition_thread, this));
+
+  // timers
+  data_pub_timer_ = this->create_wall_timer(
+    std::chrono::milliseconds(static_cast<int64_t>(1000.0 / params.data_pub_rate_hz_)),
+    std::bind(&LinuxThermalZoneBaseNode::data_pub_timer_callback, this));
+  hk_pub_timer_ = this->create_wall_timer(
+    std::chrono::milliseconds(static_cast<int64_t>(1000.0 / params.hk_pub_rate_hz_)),
+    std::bind(&LinuxThermalZoneBaseNode::hk_pub_timer_callback, this));
   RCLCPP_INFO_STREAM(this->get_logger(), "timers created");
 
   uint8_t num_thermal_zones = CountMatchingDirectories("thermal_zone");
 
+  // publishers
   for (uint8_t zone_index = 0; zone_index < num_thermal_zones; zone_index++) {
     std::string zone_string = "thermal_zone" + std::to_string(zone_index);
     publishers_linux_thermal_zone_.push_back(
@@ -37,28 +55,48 @@ LinuxThermalZoneBaseNode::LinuxThermalZoneBaseNode(const std::string & node_name
 LinuxThermalZoneBaseNode::~LinuxThermalZoneBaseNode()
 {
   RCLCPP_INFO_STREAM(this->get_logger(), "destructor executed");
+
+  data_acquisition_thread_.join();
 }
 
 // PROTECTED FUNCTIONS
 
 // PRIVATE FUNCTIONS
 
-void LinuxThermalZoneBaseNode::timer_1s_callback()
+void LinuxThermalZoneBaseNode::data_acquisition_thread(void)
 {
-  RCLCPP_DEBUG_STREAM(this->get_logger(), "timer_1s_callback executed");
-  std::vector<linux_thermal_zone_interfaces::msg::LinuxThermalZone> msgs = GetZoneMsgVector();
+  rclcpp::Rate rate(params.data_acquisition_rate_hz_);
+  while (rclcpp::ok()) {
+    RCLCPP_INFO_STREAM(
+      this->get_logger(),
+      "data_acquisition_thread executed on thread id: " << std::this_thread::get_id());
+    auto msgs = GetZoneMsgVector();
+    std::unique_lock<std::mutex> lock(linux_thermal_zone_msgs_mutex_);
+    linux_thermal_zone_msgs_ = msgs;
+    lock.unlock();  // unlock the mutex explicitly
+    rate.sleep();   // sleep to maintain the loop rate
+  }
+}
+
+void LinuxThermalZoneBaseNode::data_pub_timer_callback()
+{
+  RCLCPP_DEBUG_STREAM(this->get_logger(), "data_pub_timer_callback executed");
 
   RCLCPP_INFO_STREAM(
-    this->get_logger(), "Publishing: " << msgs.size() << " LinuxThermalZone messages");
+    this->get_logger(),
+    "Publishing: " << linux_thermal_zone_msgs_.size() << " LinuxThermalZone messages");
+
+  const std::lock_guard<std::mutex> lock(
+    linux_thermal_zone_msgs_mutex_);  // lock until end of scope
   for (uint8_t index = 0; index < publishers_linux_thermal_zone_.size(); index++) {
-    publishers_linux_thermal_zone_.at(index)->publish(msgs.at(index));
+    publishers_linux_thermal_zone_.at(index)->publish(linux_thermal_zone_msgs_.at(index));
     linux_thermal_zone_pub_count_++;
   }
 }
 
-void LinuxThermalZoneBaseNode::timer_10s_callback()
+void LinuxThermalZoneBaseNode::hk_pub_timer_callback()
 {
-  RCLCPP_DEBUG_STREAM(this->get_logger(), "timer_10s_callback executed");
+  RCLCPP_DEBUG_STREAM(this->get_logger(), "hk_pub_timer_callback executed");
   linux_thermal_zone_interfaces::msg::LinuxThermalZoneBaseNodeHk message;
   message.set__linux_thermal_zone_publish_count(linux_thermal_zone_pub_count_);
   publisher_node_hk_->publish(message);
@@ -107,11 +145,15 @@ linux_thermal_zone_interfaces::msg::LinuxThermalZone LinuxThermalZoneBaseNode::G
   std::string id = key + std::to_string(zone_index);
   std::string thermal_zone_dir = prefix + id;
 
+  // header
   msg.header.set__stamp(now());
+  msg.header.set__frame_id(id);
   // temperature
   msg.temperature.header.set__stamp(now());
   msg.temperature.header.set__frame_id(id);
   msg.temperature.temperature = GetZoneTemperature(thermal_zone_dir);
+  // type
+  msg.type = GetZoneString(thermal_zone_dir + "/type");
 
   return msg;
 }
@@ -145,4 +187,30 @@ double LinuxThermalZoneBaseNode::GetZoneTemperature(std::string thermal_zone_dir
   }
 
   return temperature;
+}
+
+std::string LinuxThermalZoneBaseNode::GetZoneString(std::string filepath)
+{
+  std::ifstream file(filepath);
+  std::string return_string;
+
+  if (file.is_open()) {
+    std::string line;
+    std::getline(file, line);  // Read the first line (assuming it contains the value)
+    file.close();
+
+    // Copy string to return and handle errors
+    try {
+      return_string = line;
+      RCLCPP_DEBUG_STREAM(this->get_logger(), filepath << " value: " << return_string);
+    } catch (const std::invalid_argument & e) {
+      RCLCPP_WARN_STREAM(this->get_logger(), "Invalid type data in file: " << filepath);
+    } catch (const std::out_of_range & e) {
+      RCLCPP_WARN_STREAM(this->get_logger(), "Type value out of range in file: " << filepath);
+    }
+  } else {
+    std::cerr << "Failed to open file " << filepath << std::endl;
+  }
+
+  return return_string;
 }

@@ -1,25 +1,23 @@
 ---
-name: Release Drafter
+name: Publish Release
 
 on:
     push:
         branches:
             - release
-    pull_request:
-        types: [opened, reopened, synchronize]
     workflow_dispatch:
 
 permissions:
     contents: read
 
 jobs:
-    update_release_draft:
+    publish_release:
         permissions:
             # write permission is required to create a github release
             contents: write
             # write permission is required for autolabeler
             # otherwise, read permission is required at least
-            pull-requests: write
+            pull-requests: read
         runs-on: ubuntu-latest
         steps:
             - name: version
@@ -34,9 +32,10 @@ jobs:
 
             - uses: release-drafter/release-drafter@v6
               with:
-                  version: ${{ steps.version.outputs.version }}
-                  publish: true
                   config-name: release-drafter-config.yml
-                  disable-autolabeler: false
+                  disable-autolabeler: true
+                  prerelease: false
+                  publish: true
+                  version: ${{ steps.version.outputs.version }}
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
