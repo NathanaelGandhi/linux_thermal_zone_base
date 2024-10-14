@@ -6,7 +6,7 @@ fail_fast: false
 
 repos:
     - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v4.6.0
+      rev: v5.0.0
       hooks:
           - id: check-added-large-files
           - id: check-ast
@@ -37,11 +37,11 @@ repos:
             args: [-x]
   # Python
     - repo: https://github.com/psf/black-pre-commit-mirror
-      rev: 24.4.2
+      rev: 24.10.0
       hooks:
           - id: black
     - repo: https://github.com/asottile/reorder-python-imports
-      rev: v3.13.0
+      rev: v3.14.0
       hooks:
           - id: reorder-python-imports
   # YAML
@@ -56,7 +56,7 @@ repos:
           - id: check-json5
   # C || C++ || Cuda
     - repo: https://github.com/pre-commit/mirrors-clang-format
-      rev: v18.1.8
+      rev: v19.1.1
       hooks:
           - id: clang-format
             args: [--style=file]
